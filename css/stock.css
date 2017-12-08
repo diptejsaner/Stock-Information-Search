@@ -1,0 +1,118 @@
+#parent {
+    background: url('http://cs-server.usc.edu:45678/hw/hw8/images/background.png');
+    min-height: 100%;
+    width: 100%;
+}
+
+.panel-body h3 {
+    text-align: center;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #ffffff;
+    margin: 15px 0;
+    padding: 0; 
+}
+
+.favlistAnimate.ng-hide-remove {
+    transform: translateX(-100%);
+    transition: all linear 0.5s;
+}
+
+.favlistAnimate.ng-hide-remove.ng-hide-remove-active {
+    transform: translateX(0%);
+}
+
+.stockDetailsAnimate.ng-hide-remove {
+    transform: translateX(0%);
+    transition: all linear 0.5s;
+}
+
+.stockDetailsAnimate.ng-hide-remove.ng-hide-remove-active {
+    transform: translateX(-100%);
+}
+
+
+
+#stockDetails hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #F5F5F5;
+    margin: 15px 0;
+    padding: 0; 
+}
+
+#stockDetails .table td:nth-child(odd) {
+    font-weight: bold;
+}
+
+.tb img {
+    width: 20px;
+    height: 20px;
+}
+
+#stockDetailsHeader .glyphicon {
+    color:#FDD531;
+    font-size:20px;
+}
+
+#stockDetailsHeader img {
+    width:25px;
+    height:25px;
+}
+
+#newsPanel .panel-body {
+    background:#EFEFEF;
+}
+
+#newsPanel h4 {
+    color: #337AB7;
+    text-align: left;
+}
+
+.phoneTabLabel {
+    display: none;
+}
+
+@media (max-width: 767px) {
+    #orderMenu .text-center {
+        text-align: left;
+    }
+    
+    .tabLabel {
+        display: none;
+    }
+
+    #favTable {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    panel {
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+    .phoneTabLabel {
+        display: block;
+    }
+}
+
+.top5 { margin-top:5px; }
+.top7 { margin-top:7px; }
+.top10 { margin-top:10px; }
+.top15 { margin-top:15px; }
+.top17 { margin-top:17px; }
+.top30 { margin-top:30px; }
+
+.bottom0 { margin-bottom: 0px; }
+.bottom5 { margin-bottom:5px; }
+.bottom7 { margin-bottom:7px; }
+.bottom10 { margin-bottom:10px; }
+.bottom15 { margin-bottom:15px; }
+.bottom17 { margin-bottom:17px; }
+.bottom30 { margin-bottom:30px; }

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Stock search</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./stock.css">
+
+    <!-- fb icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!--    Bootstrap-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!--    Bootstrap toggle-->
+    <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+
+    <!-- ngMaterial -->
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+
+    <!-- AngularJS-->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+
+    <!-- Angular Material Library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+
+    <!-- momentjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.js"></script>
+
+    <!-- Angular momentjs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-moment/1.1.0/angular-moment.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.14/moment-timezone.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.14/moment-timezone-with-data.min.js"></script>
+    <!-- highcharts -->
+    <!-- <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script> -->
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+
+    <!-- highstock -->
+    <script src="https://code.highcharts.com/stock/highstock.js"></script>
+
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+    <!-- optional -->
+    <script src="http://code.highcharts.com/modules/offline-exporting.js"></script>
+
+    <script src="./stockApp.js"></script>
+    <script src="./xml2json.js"></script>
+</head>
+
+<body>
+    <script>
+        window.fbAsyncInit = function() {
+            FB.init({
+            appId            : '875021415993850',
+            autoLogAppEvents : true,
+            xfbml            : true,
+            version          : 'v2.11'
+            });
+        };
+        
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {return;}
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        } (document, 'script', 'facebook-jssdk'));
+    </script>
+    <div id="parent">
+        <div class="container" ng-app="stockApp" ng-cloak>
+            <div ng-controller="formCtrl">
+                <!-- search panel -->
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <h3>Stock Market Search</h3>
+                        <form>
+                            <div class="form-row">
+                                <div class="col-sm-3 top15 bottom15">
+                                    <b>Enter Stock ticker symbol:
+                                        <span style="color:red">*</span>
+                                    </b>
+                                </div>
+
+                                <!-- .........md-clear-button not working......... -->
+                                <div class="col-sm-6 top15 bottom15">
+                                    <md-autocomplete md-selected-item="selectedItem" md-search-text="searchText" md-items="item in getAutoCompleteResults(searchText)"
+                                        md-no-cache="noCache" md-delay="200" md-min-length="1" md-item-text="item.Symbol" placeholder="e.g. AAPL"
+                                        md-selected-item-change="toggleQuoteBtn()" md-clear-button="false" md-search-text-change="checkEmptyInput()" md-clear-button="false">
+                                        <md-item-template>
+                                            <span>{{item.Symbol}} - {{item.Name}} ({{item.Exchange}})</span>
+                                        </md-item-template>
+                                    </md-autocomplete>
+                                    <!-- <input type="text" ng-model="symbolName" class="form-control" id="symbol" placeholder="e.g. AAPL" name="symbol"> -->
+                                </div>
+                                <div class="form-group col-sm-3 top15 bottom15">
+                                    <button ng-click="getStockDetails(searchText)" ng-disabled="quoteBtnToggle" type="button" name="getquoteBtn" class="btn btn-info">
+                                        <span class="glyphicon glyphicon-search"></span> Get Quote
+                                    </button>
+                                    <button type="button" name="clearBtn" ng-click="clearBtnClick()" class="btn btn-default">
+                                        <span class="glyphicon glyphicon-refresh"></span> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <hr>
+                <!-- favouriteListPanel -->
+                <div class="favlistAnimate" ng-show="!toggle">
+                    <div id="favouriteListPanel" class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <div class="row">
+                                        <div class="col-sm-6 text-left">
+                                            <b>Favourite List</b>
+                                        </div>
+                                        <div class="col-sm-6 text-right">
+                                            <label for="autorefreshToggle" class="hidden-xs">Automatic Refresh:</label>
+                                            <input type="checkbox" id="autorefreshToggle" data-toggle="toggle">
+                                            <!-- <toggle ng-model="toggleValue" ng-change="changed()"></toggle> -->
+                                            <button type="button" ng-click="refreshClick()" class="btn btn-basic">
+                                                <span class="glyphicon glyphicon-refresh"></span>
+                                            </button>
+                                            <button ng-disabled="!getQuoteBtnClicked" ng-click="toggleFunc()" type="button" class="btn btn-default btn-basic">
+                                                <span class="glyphicon glyphicon-chevron-right"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="orderMenu" class="panel-body">
+                                    <div class="row">
+                                        <div>
+                                            <div class="col-sm-2 text-center">
+                                                <label for="sortSelection">Sort by</label>
+                                            </div>
+                                            <div class="col-sm-2">
+                                                <select class="form-control" ng-model="sortSelectedItem" ng-change="sortItems()" id="sortSelection">
+                                                    <option>Default</option>
+                                                    <option>Symbol</option>
+                                                    <option>Price</option>
+                                                    <option>Change</option>
+                                                    <option>Change Percent</option>
+                                                    <option>Volume</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div class="col-sm-2 text-center">
+                                                <label for="orderSelection">Order</label>
+                                            </div>
+                                            <div class="col-sm-2" >
+                                                <select class="form-control" ng-model="orderSelectedItem" ng-change="sortItems()" id="orderSelection">
+                                                    <option>Ascending</option>
+                                                    <option>Descending</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-sm-4"></div>
+                                    </div>
+
+                                    <!-- favorite stock table -->
+                                    <table id="favTable" class="table table-striped top15">
+                                        <thead>
+                                            <tr class="active">
+                                                <th>Symbol</th>
+                                                <th>Stock Price</th>
+                                                <th>Change (Change Percent)</th>
+                                                <th>Volume</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="tb" id="favTableBody" ng-repeat="x in favList track by x.symbol">
+                                            <tr>
+                                                <td>{{x.symbol}}</td>
+                                                <td>{{x.price}}</td>
+                                                <td>
+                                                    <span ng-style="x.change >= 0 && {'color':'green'} || x.change < 0 && {'color':'red'}">
+                                                        {{x.change | number:2}} ({{x.changePercent | number:2}}%)
+                                                    </span>
+                                                    <img ng-src="{{x.change >= 0 && 'http://cs-server.usc.edu:45678/hw/hw6/images/Green_Arrow_Up.png' || 'http://cs-server.usc.edu:45678/hw/hw6/images/Red_Arrow_Down.png'}}"/>
+                                                </td>
+                                                <td>{{x.volume}}</td>
+                                                <td>
+                                                    <button type="button" ng-click="deleteRow($event)" class="btn btn-default btn-basic">
+                                                        <span class="glyphicon glyphicon-trash"></span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- stock details -->
+                <div id="stockDetails" class="stockDetailsAnimate" ng-show="toggle">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-sm-6 pull-left">
+                                    <button type="button" ng-click="toggleFunc()" class="btn btn-default btn-basic">
+                                        <span class="glyphicon glyphicon-chevron-left"></span>
+                                    </button>
+                                </div>
+                                <div class="col-sm-6 pull-center">
+                                    <b>Stock Details</b>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- THE TABS -->
+                        <div id="detailTabs" class="panel-body">
+                            <ul class="nav nav-pills">
+                                <li class="active">
+                                    <a href="#1a" data-toggle="pill">
+                                        <span class="glyphicon glyphicon-dashboard"></span>
+                                        <div class="tabLabel" id="tabLabel1">
+                                            Current Stock
+                                        </div>
+                                        <div class="phoneTabLabel" id="smalltabLabel1">
+                                            Stock
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#2a" data-toggle="pill">
+                                        <span class="glyphicon glyphicon-stats"></span>
+                                        <div class="tabLabel" id="tabLabel2">
+                                            Historical Charts
+                                        </div>
+                                        <div class="phoneTabLabel" id="smalltabLabel2">
+                                            Charts
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#3a" data-toggle="pill">
+                                        <span class="glyphicon glyphicon-link"></span>
+                                        <div class="tabLabel" id="tabLabel3">
+                                            News Feeds
+                                        </div>
+                                        <div class="phoneTabLabel" id="smalltabLabel3">
+                                            News
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
+
+                            <hr>
+
+                            <div class="tab-content">
+                                <div id="1a" class="tab-pane fade in active row">
+                                    <div class="col-sm-6">
+                                        <div id="stockDetailsHeader" class="row">
+                                            <div class="col-sm-6 text-left">
+                                                <b>Stock Details</b>
+                                            </div>
+                                            <div class="col-sm-6 text-right">
+                                                <button type="button" ng-click="favBtnClick()" class="btn">
+                                                    <div ng-show="!favStock">
+                                                        <span class="glyphicon glyphicon-star-empty"></span>
+                                                    </div>
+                                                    <div ng-show="favStock">
+                                                        <span class="glyphicon glyphicon-star"></span>
+                                                    </div>
+                                                </button>
+                                                <button type="button" ng-click="shareOnFB()" class="btn">
+                                                    <img src="http://cs-server.usc.edu:45678/hw/hw8/images/facebook.png">
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div ng-show="stockDetailsFetchError" class="panel panel-danger">
+                                            <div class="panel-heading">Error! Failed to get current stock data.</div>
+                                        </div>
+                                        <div ng-show="!contentLoaded && !stockDetailsFetchError" class="progress">
+                                            <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                            aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                            </div>
+                                        </div>
+                                        <table ng-show="contentLoaded && !stockDetailsFetchError" class="table table-striped top15">
+                                            <tbody class="tb">
+                                                <tr>
+                                                    <td>Stock Ticker Symbol</td>
+                                                    <td>{{stockSymbol}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Last Price</td>
+                                                    <td>{{lastPrice}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Change (Change Percent)</td>
+                                                    <td>
+                                                        <span ng-style="change >= 0 && {'color':'green'} || change < 0 && {'color':'red'}">
+                                                            {{change | number:2}} ({{changePercent | number:2}}%)
+                                                        </span>
+                                                        <img ng-src="{{change >= 0 && 'http://cs-server.usc.edu:45678/hw/hw6/images/Green_Arrow_Up.png' || 'http://cs-server.usc.edu:45678/hw/hw6/images/Red_Arrow_Down.png'}}"/>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Timestamp</td>
+                                                    <td>{{timestamp}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Open</td>
+                                                    <td>{{open}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{{closeStr}}</td>
+                                                    <td>{{close}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Day's Range</td>
+                                                    <td>{{high | number:2}} - {{low | number:2}}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Volume</td>
+                                                    <td>{{volume}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- graphs -->
+                                    <div class="col-sm-6">
+                                        <ul class="nav nav-tabs">
+                                            <li class="active"><a data-toggle="tab" href="#menu1">Price</a></li>
+                                            <li><a data-toggle="tab" href="#menu2">SMA</a></li>
+                                            <li><a data-toggle="tab" href="#menu3">EMA</a></li>
+                                            <li><a data-toggle="tab" href="#menu4">STOCH</a></li>
+                                            <li><a data-toggle="tab" href="#menu5">RSI</a></li>
+                                            <li><a data-toggle="tab" href="#menu6">ADX</a></li>
+                                            <li><a data-toggle="tab" href="#menu7">CCI</a></li>
+                                            <li><a data-toggle="tab" href="#menu8">BBANDS</a></li>
+                                            <li><a data-toggle="tab" href="#menu9">MACD</a></li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div id="menu1" class="tab-pane fade in active">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.pricevol" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get Price data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.pricevol && !graphsError.pricevol" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.pricevol && !graphsError.pricevol" id="pvDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu2" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.sma" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get SMA data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.sma && !graphsError.sma" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.sma && !graphsError.sma" id="smaDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu3" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.ema" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get EMA data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.ema && !graphsError.ema" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.ema && !graphsError.ema" id="emaDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu4" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.stoch" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get STOCH data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.stoch && !graphsError.stoch" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.stoch && !graphsError.stoch" id="stochDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu5" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.rsi" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get RSI data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.rsi && !graphsError.rsi" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.rsi && !graphsError.rsi" id="rsiDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu6" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.adx" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get ADX data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.adx && !graphsError.adx" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.adx && !graphsError.adx" id="adxDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu7" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.cci" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get CCI data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.cci && !graphsError.cci" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.cci && !graphsError.cci" id="cciDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu8" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.bbands" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get BBANDS data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.bbands && !graphsError.bbands" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.bbands && !graphsError.bbands" id="bbandsDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                            <div id="menu9" class="tab-pane fade">
+                                                <div class="row">
+                                                    <div ng-show="graphsError.macd" class="panel panel-danger">
+                                                        <div class="panel-heading">Error! Failed to get MACD data.</div>
+                                                    </div>
+                                                    <div ng-show="!graphsReady.macd && !graphsError.macd" class="progress">
+                                                        <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                                        aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-show="graphsReady.macd && !graphsError.macd" id="macdDiv" class="col-sm-12"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="2a" class="tab-pane fade">
+                                    <div class="row">
+                                        <div ng-show="graphsError.pricevol" class="panel panel-danger">
+                                            <div class="panel-heading">Error! Failed to get historical charts data.</div>
+                                        </div>
+                                        <div ng-show="!graphsReady.pricevol && !graphsError.pricevol" class="progress">
+                                            <div class="progress-bar progress-bar-striped active" role="progressbar"
+                                            aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%">
+                                            </div>
+                                        </div>
+                                        <div ng-show="graphsReady.pricevol && !graphsError.pricevol" id="histDiv" class="col-sm-12"></div>
+                                    </div>
+                                </div>
+                                <div id="3a" class="tab-pane fade">
+                                    <div ng-repeat="x in newsObj">
+                                        <div id="newsPanel" class="panel panel-default">
+                                            <div class="panel-body">
+                                                <a href="{{x.link}}" target="_blank"><h4>{{x.title}}</h2></a>
+                                                <br>
+                                                <b>Author: {{x.author}}</b>
+                                                <br>
+                                                <b>Date: {{x.date}}</b>
+                                                <br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
